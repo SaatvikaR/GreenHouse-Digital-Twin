@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 
 const API_KEY = "5d00cc4c0875b0d1e012ad02b9831869";
 const CITY = "Chennai";
-const USE_FAKE = API_KEY === "5d00cc4c0875b0d1e012ad02b9831869";
+const USE_FAKE = API_KEY === false;
 
 const FAKE_WEATHER = {
   temp: 32,

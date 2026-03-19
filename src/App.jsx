@@ -76,7 +76,7 @@ export default function App() {
     <div className="app">
       <div className="header">
         <div>
-          <h1>🌿 Greenhouse Digital Twin</h1>
+          <h1>AgriTwin</h1>
           <p>Real-time sensor monitoring · Smart alerts · AI recommendations</p>
         </div>
         <div className="header-right">
