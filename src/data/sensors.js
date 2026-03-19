@@ -5,6 +5,12 @@ export const SENSORS = [
   { id: "light",    label: "Light Level",  unit: "lux", min: 100,max: 1000,ideal: [400,800],icon: "sun" },
 ];
 
+export const SCENARIOS = {
+  heatwave: { temp: 42, humidity: 22, soil: 15, light: 950 },
+  drought:  { temp: 38, humidity: 28, soil: 12, light: 870 },
+  normal:   { temp: 25, humidity: 60, soil: 50, light: 600 },
+};
+
 export function getInitialReadings() {
   const readings = {};
   SENSORS.forEach(s => {
@@ -29,23 +35,50 @@ export function getStatus(value, sensor) {
   return "normal";
 }
 
+function sendWhatsAppAlert(sensor, value) {
+  const now = Date.now();
+  if (!window._lastAlertSent || now - window._lastAlertSent > 60000) {
+    window._lastAlertSent = now;
+
+    const direction = value < sensor.ideal[0] ? "too low" : "too high";
+
+    const messages = {
+      temp:     `🌡️ Temperature Alert!\n\nTemperature is ${direction}: ${value}°C\n\n✅ Action: Activate cooling fans and open roof vents immediately.`,
+      humidity: `💧 Humidity Alert!\n\nHumidity is ${direction}: ${value}%\n\n✅ Action: Increase air circulation and run the dehumidifier.`,
+      soil:     `🌱 Soil Moisture Alert!\n\nSoil moisture is ${direction}: ${value}%\n\n✅ Action: Trigger drip irrigation for 20 minutes immediately.`,
+      light:    `☀️ Light Level Alert!\n\nLight is ${direction}: ${value} lux\n\n✅ Action: Deploy shade netting over sensitive crops now.`,
+    };
+
+    fetch("http://localhost:3001/alert", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: messages[sensor.id] }),
+    }).catch(() => {});
+  }
+}
+
 export function generateAlert(value, sensor, status) {
   if (status === "normal") return null;
 
   if (status === "danger") {
+    // Rising alert sound
     try {
       const ctx = new (window.AudioContext || window.webkitAudioContext)();
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.connect(gain);
       gain.connect(ctx.destination);
-      osc.frequency.value = 880;
       osc.type = "sine";
-      gain.gain.setValueAtTime(0.3, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+      osc.frequency.setValueAtTime(440, ctx.currentTime);
+      osc.frequency.linearRampToValueAtTime(1200, ctx.currentTime + 0.5);
+      gain.gain.setValueAtTime(0.2, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
       osc.start(ctx.currentTime);
-      osc.stop(ctx.currentTime + 0.4);
+      osc.stop(ctx.currentTime + 0.5);
     } catch (e) {}
+
+    // WhatsApp alert — max 1 per 60 seconds
+    sendWhatsAppAlert(sensor, value);
   }
 
   const direction = value < sensor.ideal[0] ? "too low" : "too high";
@@ -57,11 +90,7 @@ export function generateAlert(value, sensor, status) {
     time: new Date().toLocaleTimeString(),
   };
 }
-export const SCENARIOS = {
-  heatwave: { temp: 42, humidity: 22, soil: 15, light: 950 },
-  drought:  { temp: 38, humidity: 28, soil: 12, light: 870 },
-  normal:   { temp: 25, humidity: 60, soil: 50, light: 600 },
-};
+
 export function getCropHealthScore(readings) {
   let total = 0;
   SENSORS.forEach(sensor => {
