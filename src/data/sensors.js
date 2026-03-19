@@ -49,7 +49,7 @@ function sendWhatsAppAlert(sensor, value) {
       light:    `☀️ Light Level Alert!\n\nLight is ${direction}: ${value} lux\n\n✅ Action: Deploy shade netting over sensitive crops now.`,
     };
 
-    fetch("https://agritwin-alerts.onrender.com", {
+    fetch("https://agritwin-alerts.onrender.com/alert", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ message: messages[sensor.id] }),
