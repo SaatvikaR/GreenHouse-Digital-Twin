@@ -232,7 +232,7 @@ body {
   .sidebar-logo p,
   .nav-item span,
   .sidebar-footer .clock { display: none; }
-  .sidebar-logo h1 { font-size: 3.5rem; }
+  .sidebar-logo h1 { font-size: 1.3rem; }
   .main { margin-left: 70px; }
   .grid-2 { grid-template-columns: 1fr; }
 }
